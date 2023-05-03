@@ -1,0 +1,1 @@
+curl -H "Host: myhost.com" localhost

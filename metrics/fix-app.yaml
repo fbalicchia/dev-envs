@@ -1,0 +1,33 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: fix-app
+  labels:
+    app: fix-app
+spec:
+  selector:
+    app: fix-app
+  ports:
+  - name: web
+    port: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fix-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fix-app
+  template:
+    metadata:
+      labels:
+        app: fix-app
+    spec:
+      containers:
+      - name: fix-app
+        image: daime/http-dump:latest 
+        ports:
+        - name: web
+          containerPort: 8080

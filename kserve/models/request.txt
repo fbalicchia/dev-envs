@@ -1,0 +1,2 @@
+
+curl -v http://sklearn-iris-predictor-default.kserve-test.127.0.0.1.nip.io/v1/models/sklearn-iris:predict -d @./iris-input.json

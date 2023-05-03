@@ -1,0 +1,22 @@
+#ngrok http 80
+#kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+#kubectl edit secret argocd-secret -n argocd
+
+
+#repo to register
+superset http://apache.github.io/superset/
+helm install my-superset superset/superset
+
+
+apache-airflow https://airflow.apache.org/
+helm install my-airflow apache-airflow/airflow --version 1.9.0
+
+
+trino https://trinodb.github.io/charts/
+my-trino trino/trino --version 0.10.2
+
+
+jupyterhub https://jupyterhub.github.io/helm-chart/
+
+
+helm install my-jupyterhub jupyterhub/jupyterhub --version 3.0.0-0.dev.git.6133.hbfc583f8
