@@ -13,6 +13,11 @@ if [ "$(docker inspect -f '{{.State.Running}}' "${reg_name}" 2>/dev/null || true
 fi
 
 
+# connect the registry to the cluster network if not already connected
+if [ "$(docker inspect -f='{{json .NetworkSettings.Networks.kind}}' "${reg_name}")" = 'null' ]; then
+  docker network connect "kind" "${reg_name}"
+fi
+
 cat << EOF |  kind create cluster --name knative --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
@@ -44,12 +49,6 @@ data:
     host: "localhost:${reg_port}"
     help: "https://kind.sigs.k8s.io/docs/user/local-registry/"
 EOF
-
-
-kubectl patch -n knative-serving cm config-deployment \
-    --type='json' \
-    -p='[{"op":"add","path":"/data/registriesSkippingTagResolving","value":"localhost:5001"}]'
-
 
 
 cat << EOF > ./istio-minimal-operator.yaml
@@ -108,6 +107,14 @@ spec:
 EOF
 kubectl patch service istio-ingressgateway -n istio-system --patch "$(cat ./patch-ingressgateway-nodeport.yaml)"
 
+# Install Cert Manager
+kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.3.0/cert-manager.yaml
+kubectl wait --for=condition=available --timeout=600s deployment/cert-manager-webhook -n cert-manager
+cd ..
+echo "😀 Successfully installed Cert Manager"
+
+
+
 
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
 kubectl create serviceaccount -n kubernetes-dashboard admin-user
@@ -119,17 +126,19 @@ kubectl patch configmap/config-domain \
   --type merge \
   --patch '{"data":{"127.0.0.1.nip.io":""}}'
 
-# Install Cert Manager
-kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.3.0/cert-manager.yaml
-kubectl wait --for=condition=available --timeout=600s deployment/cert-manager-webhook -n cert-manager
-cd ..
-echo "😀 Successfully installed Cert Manager"
 
 kubectl apply -f https://github.com/kserve/kserve/releases/download/v0.10.1/kserve.yaml
 kubectl wait --for=condition=ready pod -l control-plane=kserve-controller-manager -n kserve --timeout=300s
 kubectl apply -f https://github.com/kserve/kserve/releases/download/v0.10.1/kserve-runtimes.yaml
 echo "😀 Successfully installed KServe"
 kubectl create ns kserve-test
+kubectl patch -n knative-serving cm config-deployment \
+    --type='json' \
+    -p='[{"op":"add","path":"/data/registries-skipping-tag-resolving","value":"kind.local,ko.local,dev.local,localhost:5001"}]'
+
+
+
+
 #kubectl apply -f ./models/sklearn-iris.yaml -n  kserve-test
 #kubectl create -f https://raw.githubusercontent.com/kserve/kserve/release-0.10/docs/samples/v1beta1/sklearn/v1/perf.yaml -n kserve-test
 

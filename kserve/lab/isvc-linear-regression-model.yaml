@@ -14,11 +14,11 @@ spec:
     containers:
     - image: localhost:5001/linear_regression_model:x01
       name: kserve-container
-      readinessProbe:
-        failureThreshold: 5
-        initialDelaySeconds: 3
-        periodSeconds: 5
-        httpGet:
-          path: /v1/models/linear_regression_model
-          port: 8080
-          scheme: HTTP
+      # readinessProbe:
+      #   failureThreshold: 5
+      #   initialDelaySeconds: 3
+      #   periodSeconds: 5
+      #   httpGet:
+      #     path: /v1/models/linear_regression_model
+      #     port: 8080
+      #     scheme: HTTP

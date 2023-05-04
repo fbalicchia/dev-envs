@@ -10,7 +10,7 @@ data plane explore are :
 * [ArgoCD](https://argo-cd.readthedocs.io/en/stable/)
 * [Roolaouts](https://argo-rollouts.readthedocs.io/en/stable/)
 * [Keda](https://keda.sh/)
-* [Keda http-add-on] (https://github.com/kedacore/http-add-on)
+* [http-add-on] (https://github.com/kedacore/http-add-on)
 * [Prometheus](https://prometheus.io/)
 
 
