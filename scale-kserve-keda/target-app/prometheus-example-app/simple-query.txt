@@ -1,0 +1,1 @@
+count(count by (pod) (rate(http_request_duration_seconds_count[30m])))
