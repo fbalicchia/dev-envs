@@ -139,6 +139,3 @@ kubectl patch -n knative-serving cm config-deployment \
 helm upgrade --install keda kedacore/keda --namespace keda --create-namespace --wait
 
 kubectl create ns metrics
-kubectl apply -f ./metrics-server-ignore-ssl.yaml
-
-helm install prometheus prometheus-community/kube-prometheus-stack --values ./values-latest.yaml -n metrics

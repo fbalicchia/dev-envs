@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: external-scaler
+  labels:
+    app: external-scaler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: external-scaler
+  template:
+    metadata:
+      labels:
+        app: external-scaler
+    spec:
+      containers:
+      - image: localhost:5001/keda-external-scaler:x01
+        args: ["-port","6000","-url","http://prometheus-operated.metrics.svc.cluster.local:9090","-logLevel","debug"]
+        name: external-scaler
+        ports:
+        - name: grpc
+          containerPort: 6000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: external-scaler
+  name: external-scaler
+spec:
+  ports:
+  - name: grpc
+    port: 6000
+    protocol: TCP
+    targetPort: 6000
+  selector:
+    app: external-scaler
+  type: ClusterIP
+

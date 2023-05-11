@@ -1,0 +1,20 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: prometheus-example-app-scaledobject
+  labels:
+    deploymentName: prometheus-example-app
+spec:
+  scaleTargetRef:
+    name: prometheus-example-app
+  pollingInterval: 15  
+  cooldownPeriod:  15 
+  idleReplicaCount: 1
+  minReplicaCount:  2 
+  maxReplicaCount: 5
+  triggers:
+  - type: external
+    metadata:
+      threshold: "5"
+      metricName: predictScale
+      query: count(count by (pod) (rate(http_request_duration_seconds_count[range])))
