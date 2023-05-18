@@ -34,6 +34,6 @@ class OLSModel(Model):
 
 
 if __name__ == "__main__":
-    model = OLSModel("linear_regression_model_grpc")
+    model = OLSModel("linear-regression-model-grpc")
     model.load()
     ModelServer().start([model])

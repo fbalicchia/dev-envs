@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -o errexit
 kind delete clusters --all
-docker container stop kind-registry
-docker container rm kind-registry
+docker container stop kind-registry || true
+docker container rm kind-registry || true
 # create registry container unless it already exists
 reg_name='kind-registry'
 reg_port='5001'
