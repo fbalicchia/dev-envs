@@ -5,7 +5,14 @@
 main(){
 	clean
 	generate
+	load
 }	
+
+
+load() {
+	echo "load"
+	for f in dest/*.yaml; do kubectl apply -f $f; done
+}
 
 clean() {
 	rm -rf ./dest/*

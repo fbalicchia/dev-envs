@@ -1,9 +1,26 @@
 #!/usr/bin/env bash
 set -o errexit
-kind delete clusters --all
 
 
-cat << EOF |  kind create cluster --config=-
+main(){
+  kubernetes
+  istio
+  certmanager
+  metrics
+}
+
+
+metrics(){
+  kubectl apply -f $PWD/addons/prometheus.yaml
+  kubectl apply -f $PWD/addons/grafana.yaml
+}
+
+
+
+kubernetes() {
+  echo "${em}① Kubernetes${me}"
+  kind delete clusters --all
+  cat << EOF |  kind create cluster --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
@@ -15,9 +32,11 @@ nodes:
   - containerPort: 31443
     hostPort: 443
 EOF
+}
 
-
-cat << EOF > ./istio-minimal-operator.yaml
+istio() {
+  echo "${em}② istio${me}"
+  cat << EOF > ./istio-minimal-operator.yaml
 apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
 spec:
@@ -30,16 +49,15 @@ spec:
       istio-ingressgateway: 
         name: cluster-local-gateway
         runAsRoot: true
-  addonComponents:
+  components:
     pilot:
       enabled: true
-    tracing:
-      enabled: false
-    kiali:
-      enabled: false
-    prometheus:
-      enabled: false
-  components:
+      k8s:
+        env:
+        - name: PILOT_ENABLE_RDS_CACHE
+          value: "false"
+
+
     ingressGateways:
       - name: istio-ingressgateway
         enabled: true
@@ -60,7 +78,6 @@ spec:
               name: https
 EOF
 istioctl manifest apply -f istio-minimal-operator.yaml -y
-
 cat << EOF > ./patch-ingressgateway-nodeport.yaml
 spec:
   type: NodePort
@@ -92,10 +109,17 @@ spec:
 EOF
 
 kubectl apply -f ./ingress-gateway.yaml -n istio-system
+}
 
 
-# Install Cert Manager
-kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.3.0/cert-manager.yaml
-kubectl wait --for=condition=available --timeout=600s deployment/cert-manager-webhook -n cert-manager
-cd ..
-echo "😀 Successfully installed Cert Manager"
+certmanager(){
+  # Install Cert Manager
+  kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.3.0/cert-manager.yaml
+  kubectl wait --for=condition=available --timeout=600s deployment/cert-manager-webhook -n cert-manager
+  echo "😀 Successfully installed Cert Manager"
+}
+
+
+main @
+
+
