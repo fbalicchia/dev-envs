@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fullname
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fullname
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: fullname
+        version: v1
+    spec:
+      containers:
+      - image: docker.io/kennethreitz/httpbin
+        imagePullPolicy: IfNotPresent
+        name: httpbin
+        command: ["gunicorn", "--access-logfile", "-", "-b", "0.0.0.0:80", "httpbin:app"]
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fullname
+  namespace: default
+  labels:
+    app: fullname
+spec:
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 80
+  selector:
+    app: fullname
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: fullname
+spec:
+  gateways:
+   - istio-system/test-gateway
+  hosts:
+    - fullname.127.0.0.1.nip.io
+  http:
+  - route:
+    - destination:
+        host: fullname.default.svc.cluster.local
+        port:
+          number: 8000

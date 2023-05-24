@@ -3,14 +3,14 @@ set -o errexit
 
 main() {
   echo "${em}Allocating...${me}"
-  kubernetes
+  #kubernetes
   istio
   certmanager
   serving
-  eventing
-  kserve
-  keda
-  createNamespace
+  #eventing
+  #kserve
+  #keda
+  #createNamespace
 }
 
 
