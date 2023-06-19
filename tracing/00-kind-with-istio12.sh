@@ -4,8 +4,8 @@ set -o errexit
 main() {
   echo "${em}Allocating...${me}"
   kubernetes
-  #istio
-  #certmanager
+  istio
+  certmanager
   #serving
   #eventing
   #kserve
@@ -67,6 +67,7 @@ data:
 EOF
 }
 
+
 istio(){
   echo "${em}② istio${me}"
   cat << EOF > ./istio-minimal-operator.yaml
@@ -85,12 +86,6 @@ spec:
   addonComponents:
     pilot:
       enabled: true
-    tracing:
-      enabled: false
-    kiali:
-      enabled: false
-    prometheus:
-      enabled: false
   components:
     ingressGateways:
       - name: istio-ingressgateway
@@ -111,7 +106,7 @@ spec:
             - port: 443
               name: https
 EOF
-istioctl manifest apply -f istio-minimal-operator.yaml -y
+/home/fbalicchia/bin/istio-1.12.1/bin/istioctl manifest apply -f istio-minimal-operator.yaml -y
 
 cat << EOF > ./patch-ingressgateway-nodeport.yaml
 spec:

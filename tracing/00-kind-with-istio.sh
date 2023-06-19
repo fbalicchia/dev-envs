@@ -4,8 +4,8 @@ set -o errexit
 main() {
   echo "${em}Allocating...${me}"
   kubernetes
-  #istio
-  #certmanager
+  istio
+  certmanager
   #serving
   #eventing
   #kserve
@@ -67,12 +67,23 @@ data:
 EOF
 }
 
+
 istio(){
   echo "${em}② istio${me}"
   cat << EOF > ./istio-minimal-operator.yaml
 apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
 spec:
+  meshConfig:
+    defaultProviders:
+      tracing:
+      - "skywalking" 
+    enableTracing: true
+    extensionProviders:
+    - name: "skywalking"
+      skywalking:
+        service: skywalking-oap.istio-system.svc.cluster.local
+        port: 11800
   values:
     global:
       proxy:
@@ -85,12 +96,6 @@ spec:
   addonComponents:
     pilot:
       enabled: true
-    tracing:
-      enabled: false
-    kiali:
-      enabled: false
-    prometheus:
-      enabled: false
   components:
     ingressGateways:
       - name: istio-ingressgateway

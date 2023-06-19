@@ -32,6 +32,7 @@ spec:
     metadata:
       labels:
         app: httpbin
+        sidecar.istio.io/inject: "true"
         version: v1
     spec:
       containers:

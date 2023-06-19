@@ -9,7 +9,7 @@ spec:
     extensionProviders:
     - name: "skywalking"
       skywalking:
-        service: tracing.istio-system.svc.cluster.local
+        service: skywalking-oap.istio-system.svc.cluster.local
         port: 11800
   values:
     global:
