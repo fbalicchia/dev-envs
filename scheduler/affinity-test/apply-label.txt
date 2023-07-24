@@ -1,0 +1,3 @@
+k label no <node1> region=r1 zone=z1
+k label no <node2> region=r1 zone=z2 
+k get no --show-labels

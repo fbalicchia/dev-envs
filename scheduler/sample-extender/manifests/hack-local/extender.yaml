@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-scheduler
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: my-scheduler-cluster-admin
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    namespace: kube-system
+    name: my-scheduler
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-scheduler-config
+  namespace: kube-system
+data:
+  config.yaml: |
+    apiVersion: kubescheduler.config.k8s.io/v1alpha1
+    kind: KubeSchedulerConfiguration
+    schedulerName: my-scheduler
+    algorithmSource:
+      policy:
+        configMap:
+          namespace: kube-system
+          name: my-scheduler-policy
+    leaderElection:
+      leaderElect: true
+      lockObjectName: my-scheduler
+      lockObjectNamespace: kube-system
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-scheduler-policy
+  namespace: kube-system
+data:
+ policy.cfg : |
+  {
+    "kind" : "Policy",
+    "apiVersion" : "v1",
+    "extenders" : [{
+      "urlPrefix": "http://localhost:8888",
+      "filterVerb": "filter",
+      "prioritizeVerb": "prioritize",
+      "enableHttps": false,
+      "nodeCacheCapable": false
+    }],
+    "hardPodAffinitySymmetricWeight" : 10
+  }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-scheduler
+  namespace: kube-system
+  labels:
+    app: my-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-scheduler
+  template:
+    metadata:
+      labels:
+        app: my-scheduler
+    spec:
+      serviceAccountName: my-scheduler
+      volumes:
+      - name: my-scheduler-config
+        configMap:
+          name: my-scheduler-config
+      containers:
+      - name: my-scheduler-ctr
+        image: k8s.gcr.io/kube-scheduler:v1.24.1
+        imagePullPolicy: IfNotPresent
+        args:
+        - kube-scheduler
+        - --config=/my-scheduler/config.yaml
+        - -v=4
+        volumeMounts:
+        - name: my-scheduler-config
+          mountPath: /my-scheduler
+      - name: my-scheduler-extender-ctr
+        image: localhost:5000/sample-scheduler-extender:x01
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 8888

@@ -6,10 +6,10 @@ main() {
   kubernetes
   istio
   certmanager
-  #serving
+  serving
   #eventing
   #kserve
-  #keda
+  keda
   #createNamespace
 }
 
